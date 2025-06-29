@@ -9,7 +9,8 @@ namespace EAWebApp.Producer
     {
         private readonly ProductAPI _productApiClient;
 
-        public ProductUtil() => _productApiClient = new ProductAPI("http://localhost:8001/", new HttpClient());
+        // for local run - http://localhost:8001; for container run - "http://ea_api:8001/"
+        public ProductUtil() => _productApiClient = new ProductAPI("http://ea_api:8001/", new HttpClient());
 
         public async Task<Product> CreateProduct(Product product)
         {
