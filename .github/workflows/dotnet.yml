@@ -31,11 +31,22 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
+    - name: Wait for ea_webapp
+      run: |
+        for i in {1..30}; do
+          if curl --silent http://localhost:5001 > /dev/null; then
+            echo "ea_webapp is up!"
+            break
+          fi
+          echo "Waiting for ea_webapp..."
+          sleep 2
+        done
+
     - name: Run headless tests
       uses: coactions/setup-xvfb@v1.0.1
       with: 
         working-directory: ./EaApplicationTest
         run: dotnet test --no-build --verbosity normal
-      continue-on-error: true
+      continue-on-error: false
  
            
