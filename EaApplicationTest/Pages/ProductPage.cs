@@ -33,7 +33,7 @@ public class ProductPage : IProductPage
     public void ClickCreateButton()
     {
         lnkCreate.Click();
-        ExtentReport._test.Log(Status.Info, "Click Product");
+       // ExtentReport._test.Log(Status.Info, "Click Product");
     }
 
    
@@ -47,13 +47,13 @@ public class ProductPage : IProductPage
         dropDownProductType.SelectDropDownByText(product.ProductType.ToString());
         
         btnCreate.Click();
-        ExtentReport._test.Log(Status.Info, "Create Product");///
+       // ExtentReport._test.Log(Status.Info, "Create Product");///
     }
 
     public string GetProductName() => txtName.Text;
     public void PerformClickOnSpecialValue(string name, string operation)
     {
         tableList.PerformActionOnCell("5", "Name", name, operation);
-        ExtentReport._test.Log(Status.Info, $"Click on Special Value for the name:{name}, operation:{operation}");
+      //  ExtentReport._test.Log(Status.Info, $"Click on Special Value for the name:{name}, operation:{operation}");
     }
 }

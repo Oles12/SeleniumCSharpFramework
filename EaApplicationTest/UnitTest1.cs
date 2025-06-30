@@ -14,8 +14,8 @@ using Xunit.Abstractions;
 
 namespace EaApplicationTest;
 
-[Collection("Test collection")]
-public class UnitTest1 : DriverFixture
+//[Collection("Test collection")]
+public class UnitTest1 //: DriverFixture
 { 
     private readonly IHomePage _homePage;
     private readonly IProductPage _productPage;
@@ -34,11 +34,16 @@ public class UnitTest1 : DriverFixture
        // _extentReport = ExtentReport.InitializeExtentReport();
     }*/
 
-    public UnitTest1(IHomePage homePage, IProductPage productPage, TestSettings testSettings,ITestOutputHelper output) : base(testSettings, output)
+    public UnitTest1(IHomePage homePage, IProductPage productPage)
     {
         _homePage = homePage;
         _productPage = productPage;
     }
+    /*public UnitTest1(IHomePage homePage, IProductPage productPage, TestSettings testSettings,ITestOutputHelper output) : base(testSettings, output)
+    {
+        _homePage = homePage;
+        _productPage = productPage;
+    }*/
     
     [Theory]
     [AutoData] // AutoFixture.XUnit2 nuget package that generated data for model
@@ -59,18 +64,20 @@ public class UnitTest1 : DriverFixture
         _productPage.CreateProduct(product);
         _productPage.PerformClickOnSpecialValue(product.Name, "Details");
         
-        _productPage.GetProductName().Should().Be(product.Name + 1);
+        _productPage.GetProductName().Should().Be(product.Name);
        // test.Log(Status.Pass, "Test executed successfully");
 
+      /*
       try
       {
           RecordTestResult(CurrentTestName, TestResult.Pass);
       }
       catch (Exception e)
       {
-          RecordTestResult(CurrentTestName, TestResult.Fail);
+          */
+         // RecordTestResult(CurrentTestName, TestResult.Fail);
       }
        // RecordTestResult(CurrentTestName, TestResult.Pass);
       //  _extentReport.Flush();
     }
-}
+//}

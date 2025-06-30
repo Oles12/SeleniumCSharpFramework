@@ -37,7 +37,7 @@ public class DriverFixture : IDriverFixture, IDisposable
        // CreateTests();
     }
     
-    public DriverFixture(TestSettings testSettings, ITestOutputHelper output)
+    /*public DriverFixture(TestSettings testSettings, ITestOutputHelper output)
     {
         _output = output; 
         _testSettings = testSettings;
@@ -50,7 +50,7 @@ public class DriverFixture : IDriverFixture, IDisposable
         CurrentTest = ExtentReport._extent.CreateTest(CurrentTestName);
         ExtentReport._test = CurrentTest;
         RecordTestResult(CurrentTestName, TestResult.Unknown);
-    }
+    }*/
 
     private ExtentTest CreateTests() => ExtentReport._extent.CreateTest(GetTestName());
     
@@ -122,6 +122,7 @@ public class DriverFixture : IDriverFixture, IDisposable
     {
        //_extentReport.Flush();
        Driver.Quit();
+       /*
        string path = System.AppDomain.CurrentDomain.BaseDirectory + "screenshot";
        bool exists = Directory.Exists(path); 
        if (!exists)
@@ -148,6 +149,7 @@ public class DriverFixture : IDriverFixture, IDisposable
                CurrentTest.AddScreenCaptureFromPath(screenshotFilePath, "Test failure screenshot");
                break;
        }
+       */
    
     }
 }
