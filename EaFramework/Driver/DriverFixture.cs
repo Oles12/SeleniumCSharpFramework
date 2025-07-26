@@ -1,11 +1,9 @@
 using System.Reflection;
 using AventStack.ExtentReports;
-using AventStack.ExtentReports.Reporter;
 using EaFramework.Config;
 using EaFramework.Extensions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.DevTools.V136.DOM;
 using OpenQA.Selenium.Edge;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Remote;
@@ -18,65 +16,73 @@ namespace EaFramework.Driver;
 
 public class DriverFixture : IDriverFixture, IDisposable
 {
+    public IWebDriver Driver { get; }
+    public ExtentTest Test { get; private set; }
     private readonly TestSettings _testSettings;
-    
-    public ITestOutputHelper _output; //
-   // public ExtentReports _extentReport;
-    public ExtentTest CurrentTest { get; private set; } // to add the test name into the report
-    private static readonly Dictionary<string, TestResult> _testResults = new Dictionary<string, TestResult>();
-    protected string CurrentTestName;
-    
-    public IWebDriver Driver { get;}
-    public DriverFixture(TestSettings testSettings)
+    private readonly ITestOutputHelper _output;
+    private static readonly Dictionary<string, TestResult> _testResults = new();
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DriverFixture"/> class.
+    /// </summary>
+    /// <param name="testSettings">The test settings.</param>
+    /// <param name="output">The xUnit test output helper.</param>
+    public DriverFixture(TestSettings testSettings, ITestOutputHelper output)
     {
-        _output = new TestOutputHelper();
+        _output = output;
         _testSettings = testSettings;
         Driver = _testSettings.TestRunType == TestRunType.Local ? GetWebDriver() : GetRemoteWebDriver();
-        Driver.Navigate().GoToUrl(testSettings.ApplicationUrl); //"http://localhost:8000"
-      //  _extentReport = ExtentReport.InitializeExtentReport();
-       // CreateTests();
+        Driver.Navigate().GoToUrl(testSettings.ApplicationUrl); //"http://localhost:8000" // for remote:  "http://localhost:5001"
     }
-    
-    /*public DriverFixture(TestSettings testSettings, ITestOutputHelper output)
-    {
-        _output = output; 
-        _testSettings = testSettings;
-        Driver = _testSettings.TestRunType == TestRunType.Local ? GetWebDriver() : GetRemoteWebDriver();
-        Driver.Navigate().GoToUrl(testSettings.ApplicationUrl); //"http://localhost:8000"
-       //  _extentReport = ExtentReport.InitializeExtentReport();
-        // CreateTests();
 
-        CurrentTestName = _output.GetTestName(); // Use method to extract test name
-        CurrentTest = ExtentReport._extent.CreateTest(CurrentTestName);
-        ExtentReport._test = CurrentTest;
-        RecordTestResult(CurrentTestName, TestResult.Unknown);
-    }*/
-
-    private ExtentTest CreateTests() => ExtentReport._extent.CreateTest(GetTestName());
     
-    public string GetTestName()//////
+    /// <summary>
+    /// Gets the name of the current test.
+    /// </summary>
+    /// <returns>The test name.</returns>
+    public string GetTestName()
     {
         var type = _output.GetType();
-        var testMember = type.GetField("test", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        var testMember = type.GetField("test", BindingFlags.Instance | BindingFlags.NonPublic);
         var test = (ITest)testMember?.GetValue(_output)!;
-        var methodName = test.TestCase.TestMethod.Method.Name;
-        // The methodName variable now holds the name of the test method.
-
-        return methodName;
+        return test.TestCase.TestMethod.Method.Name;  // The methodName variable now holds the name of the test method.
     }
-
-    protected void RecordTestResult(string testName, TestResult result)
+    
+    public void ExecuteTest(Action testAction)
     {
-        // Store the test result in the static dictionary
-        _testResults[testName] = result;
+        var testName = GetTestName();// Use method to extract test name
+        Test = ExtentReport.CreateTest(testName);
+        Test.Log(Status.Info, "Test started");
+        
+        try
+        {
+            testAction();
+            _testResults[testName] = TestResult.Pass;
+            Test.Log(Status.Pass, "Test executed successfully");
+        }
+        catch (Exception e)
+        {
+            _testResults[testName] = TestResult.Fail;
+            Test.Fail(e.Message);
+            Test.CaptureScreenshotAndAttachToExtentReport(Driver, $"{testName}_failure.png");
+            throw; 
+        }
     }
 
+    /// <summary>
+    /// Represents the result of a test.
+    /// </summary>
     public enum TestResult
     {
         Pass,
         Fail,
         Unknown
     }
+    
+    /// <summary>
+    /// Gets the local WebDriver instance based on the browser type specified in the test settings.
+    /// </summary>
+    /// <returns>An <see cref="IWebDriver"/> instance.</returns>
     private IWebDriver GetWebDriver()
     {
         return _testSettings.BrowserType switch
@@ -89,7 +95,10 @@ public class DriverFixture : IDriverFixture, IDisposable
         };
     }
     
-    // To perform operation in Selenium Web Driver Grid
+    /// <summary>
+    /// Gets the remote WebDriver instance for Selenium Grid execution.
+    /// </summary>
+    /// <returns>An <see cref="IWebDriver"/> instance for remote execution.</returns>
     private IWebDriver GetRemoteWebDriver()
     {
         return _testSettings.BrowserType switch
@@ -102,6 +111,11 @@ public class DriverFixture : IDriverFixture, IDisposable
         };
     }
 
+    /// <summary>
+    /// Takes a screenshot and saves it to the specified path.
+    /// </summary>
+    /// <param name="fileName">The name of the screenshot file.</param>
+    /// <returns>The full path of the saved screenshot.</returns>
     public string TakeScreenshotAsPath(string fileName)
     {
         var screenshot = Driver.TakeScreenshot();
@@ -110,6 +124,9 @@ public class DriverFixture : IDriverFixture, IDisposable
         return path;
     }
 
+    /// <summary>
+    /// Represents the browser type for test execution.
+    /// </summary>
     public enum BrowserType
     {
         Chrome,
@@ -118,38 +135,11 @@ public class DriverFixture : IDriverFixture, IDisposable
         EdgeChromium  
     }
 
+    /// <summary>
+    /// Disposes the WebDriver instance.
+    /// </summary>
     public void Dispose()
     {
-       //_extentReport.Flush();
        Driver.Quit();
-       /*
-       string path = System.AppDomain.CurrentDomain.BaseDirectory + "screenshot";
-       bool exists = Directory.Exists(path); 
-       if (!exists)
-       {
-           Directory.CreateDirectory(path);
-       }
-
-       TestResult currentTestResult = _testResults.GetValueOrDefault(CurrentTestName);
-
-       
-       switch (currentTestResult)
-       {
-           case TestResult.Pass:
-               CurrentTest.Log(Status.Pass, CurrentTestName + " run successfully");
-               break;
-           case TestResult.Fail:
-           case TestResult.Unknown:
-               _output.WriteLine(CurrentTestName + " Test Failed");
-               var screenshot = ((ITakesScreenshot)Driver).GetScreenshot();
-               var screenshotFileName = $"{CurrentTestName}.png"; // $"Guid.NewGuid().png"
-               var screenshotFilePath  = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), screenshotFileName);//
-               //var screenshotFilePath  = path + "\" + screenshotFileName;
-               screenshot.SaveAsFile(screenshotFilePath);//
-               CurrentTest.AddScreenCaptureFromPath(screenshotFilePath, "Test failure screenshot");
-               break;
-       }
-       */
-   
     }
 }

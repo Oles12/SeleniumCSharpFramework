@@ -19,13 +19,13 @@ public class TestHooks : IAsyncLifetime
     public Task InitializeAsync()
     {
         ExtentReport.InitializeExtentReport();
-        // Nothing initialize ar the start of the test run
+        // Nothing initialize at the start of the test run
         return Task.CompletedTask;
     }
 
     public Task DisposeAsync()
     {
-       ExtentReport.FlushReport(); // only flush once after all tests are  done
+       ExtentReport.FlushReport(); // only flush once after all tests are done
        return Task.CompletedTask;
     }
 }
