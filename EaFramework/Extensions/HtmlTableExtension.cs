@@ -66,6 +66,11 @@ public static class HtmlTableExtension
         return columnSpecialValue;
     }
 
+    public static List<TableDatacollection> GetTableData(this IWebElement element)
+    {
+        return ReadTable(element);
+    }
+
     public static void PerformActionOnCell(this IWebElement element, string targetColumnIndex, string refColumnName,
         string refColumnValue, string controlToOperate = null)
     {
